@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.xpatterns</groupId>
-    <artifactId>xpatterns-spark-api</artifactId>
-    <name>xpatterns-spark-api-3.0.0</name>
-    <version>3.0.0-spark110-cdh520</version>
+    <artifactId>xpatterns-spark-api-3.0.0</artifactId>
+    <version>3.0.0-cm5-spark110-cdh520</version>
+    <name>xPatterns Spark Api</name>
     <packaging>jar</packaging>
     <url>https://github.com/Atigeo/xpatterns-spark-api</url>
 
