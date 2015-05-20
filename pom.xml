@@ -134,26 +134,17 @@
     </dependencies>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
+
+        <sourceDirectory>src/main</sourceDirectory>
         <resources>
             <resource>
-                <directory>src/main/resources</directory>
-                <excludes>
-                    <exclude>*</exclude>
-                </excludes>
-                <filtering>false</filtering>
+                <directory>src/main</directory>
+                <filtering>true</filtering>
             </resource>
         </resources>
-        <finalName>${project.artifactId}</finalName>
+
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
