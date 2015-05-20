@@ -4,7 +4,7 @@
 
     <groupId>com.xpatterns</groupId>
     <artifactId>xpatterns-spark-api</artifactId>
-    <name>xpatterns-spark-api</name>
+    <name>xpatterns-spark-api-3.0.0</name>
     <version>3.0.0-spark110-cdh520</version>
     <packaging>jar</packaging>
     <url>https://github.com/Atigeo/xpatterns-spark-api</url>
