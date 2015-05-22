@@ -1,5 +1,6 @@
 package com.xpatterns.spark.core.java;
 
+import com.google.gson.Gson;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 
 
 /**
@@ -28,8 +30,10 @@ import java.util.HashSet;
 
 public abstract class XPatternsSparkJobClient {
 
+    public static final String SPARK_UI_PORT = "sparkUiPort";
     private String serverURI;
     private String XPATTERNS_SJS_BRIDGE_CLASS_PATH = "com.spark.job.server.scala.XPatternsSparkBridge";
+    public final SimpleDateFormat CUSTOM_DATE = new SimpleDateFormat("\"yyyy-MM-dd HH:mm:ss\"");
 
 
     public abstract void writeInfo(String info);
@@ -58,7 +62,8 @@ public abstract class XPatternsSparkJobClient {
             }
         }
 
-        input.append("xpatterns_submission_date=" + new SimpleDateFormat("\"yyyy-MM-dd HH:mm:ss\"").format(new Date()) + "\n");
+
+        input.append("xpatterns_submission_date=" + CUSTOM_DATE.format(new Date()) + "\n");
 
         return launchJob(input.toString(), context, sync);
 
@@ -76,27 +81,30 @@ public abstract class XPatternsSparkJobClient {
         HttpClient httpclient = HttpClients.createDefault();
 
 
-        String uri = String.format("%s/job?runningClass=%s&context=%s", getServerURI(), XPATTERNS_SJS_BRIDGE_CLASS_PATH, contextName);
-        writeInfo("######################## Launch Job URI:" + uri);
+        String uri = String.format("%s/jobs?runningClass=%s&contextName=%s", getServerURI(), XPATTERNS_SJS_BRIDGE_CLASS_PATH, contextName);
+        writeInfo("######################## Launching Job URI: " + uri);
 
         HttpPost httpPost = new HttpPost(uri);
         httpPost.setEntity(new StringEntity(input));
 
         HttpResponse response = httpclient.execute(httpPost);
 
+
         validateResponseURI(response, uri);
 
         String requestResult = EntityUtils.toString(response.getEntity());
+        Map<String, Object> values = new Gson().fromJson(requestResult, Map.class);
+
 
         if (requestResult.contains("ERROR")) {
+            writeInfo("##################### RequestResult ###################\n" + requestResult);
             throw new RuntimeException(requestResult + " ***URI***" + uri);
         }
 
-        writeInfo("##################### RequestResult ###################\n" + requestResult);
 
-        writeInfo("\n#########################################################");
+        writeInfo("\n######### Job [" + (String) values.get("jobId") + "] launched successfully, starting execution #########");
 
-        return requestResult;
+        return (String) values.get("jobId");
     }
 
     private boolean checkHttpResponse(HttpResponse response) throws Exception {
@@ -145,12 +153,12 @@ public abstract class XPatternsSparkJobClient {
 
     public void deleteContext(String contextName) throws Exception {
 
-        writeInfo("Delete context " + contextName + " if exists!");
+        writeInfo("Deleting context " + contextName + " if exists!!!");
 
-        // check if context exists before creation
+        // check if context exists before deletion
         if (checkContextExist(contextName)) {
             HttpClient httpclient = HttpClients.createDefault();
-            String uri = String.format("%s/context/%s", getServerURI(), contextName);
+            String uri = String.format("%s/contexts/%s", getServerURI(), contextName);
 
             HttpDelete httpDelete = new HttpDelete(uri);
 
@@ -159,16 +167,18 @@ public abstract class XPatternsSparkJobClient {
             while (retryTimes <= 5 && validateDeleteResponse == false) {
                 try {
                     HttpResponse response = httpclient.execute(httpDelete);
-                    writeInfo("Validate delete context response!");
                     checkHttpResponse(response);
                     writeInfo(EntityUtils.toString(response.getEntity()));
                     validateDeleteResponse = true;
+                    writeInfo("Context " + contextName + " deleted!");
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     writeError(ex.getMessage() + "\n Retry count: " + retryTimes);
                     retryTimes++;
                 }
             }
+        } else {
+            writeInfo("Context " + contextName + " doesn't exist!");
         }
         Thread.sleep(5000);
 
@@ -176,21 +186,16 @@ public abstract class XPatternsSparkJobClient {
 
     public boolean checkContextExist(String contextName) throws Exception {
 
-
         HttpClient httpclient = HttpClients.createDefault();
-        String uri = String.format("%s/context/%s", getServerURI(), contextName);
+        String uri = String.format("%s/contexts/%s", getServerURI(), contextName);
 
         HttpGet httpGet = new HttpGet(uri);
 
         HttpResponse response = httpclient.execute(httpGet);
 
-        checkHttpResponse(response);
-
-        String contextResult = EntityUtils.toString(response.getEntity());
-        if (contextResult.contains("Context exists")) {
-            return true;
-        }
-        return false;
+        boolean result = 400 == response.getStatusLine().getStatusCode() ? false : true;
+        writeInfo("Checking context : " + contextName + " ...if exists... is " + result);
+        return result;
 
     }
 
@@ -209,16 +214,16 @@ public abstract class XPatternsSparkJobClient {
 
     public String getJobStatus(String jobId, String contextName) throws Exception {
         HttpClient httpclient = HttpClients.createDefault();
-        String uri = String.format("%s/job/?jobId=%s&contextName=%s", getServerURI(), jobId, contextName);
+        String uri = String.format("%s/jobs/%s?contextName=%s", getServerURI(), jobId, contextName);
         HttpGet httpGet = new HttpGet(uri);
 
         HttpResponse response = httpclient.execute(httpGet);
         checkHttpResponse(response);
 
         String requestResponse = EntityUtils.toString(response.getEntity());
+        Map<String, Object> values = new Gson().fromJson(requestResponse, Map.class);
 
-
-        return requestResponse;
+        return values == null ? "Status is not retrieved!!!" : (String) values.get("status");
 
     }
 
@@ -228,7 +233,7 @@ public abstract class XPatternsSparkJobClient {
         HttpResponse response = null;
 
         HttpClient httpclient = HttpClients.createDefault();
-        String uri = String.format("%s/context/%s",
+        String uri = String.format("%s/contexts/%s",
                 getServerURI(), contextName);
 
         writeInfo("Context URI: " + uri);
@@ -245,18 +250,29 @@ public abstract class XPatternsSparkJobClient {
 
         } catch (RuntimeException e) {
             //this comes only from validationResponse line!!!
-            throw new RuntimeException("1Context " + contextName + " was NOT created! Caused by..." + e.getMessage());
+            throw new RuntimeException("1. Context " + contextName + " was NOT created! Caused by..." + e.getMessage());
         } catch (Exception e) {
-            throw new RuntimeException("2Context " + contextName + " was NOT created! Caused by..." + getHttpResponseEntityAsString(response));
+            throw new RuntimeException("2. Context " + contextName + " was NOT created! Caused by..." + getHttpResponseEntityAsString(response));
         }
 
         if (resultResponse) {
-            Integer sparkUIPort = Integer.valueOf(getHttpResponseEntityAsString(response));
-            writeInfo("Context " + contextName + " was created!");
-            return sparkUIPort;
+
+            String responseAsString = getHttpResponseEntityAsString(response);
+
+            Map<String, String> values = new Gson().fromJson(responseAsString, Map.class);
+
+            String sparkUiPort = values.get(SPARK_UI_PORT);
+            if (values != null && sparkUiPort != null) {
+
+                writeInfo("Context " + contextName + " was created on UI port " + sparkUiPort + "!");
+                return Integer.valueOf(sparkUiPort);
+            }
+
         } else {
             throw new RuntimeException("!!! Context creation failed!");
         }
+
+        return -1;
     }
 
     //Hadoop Configuration
