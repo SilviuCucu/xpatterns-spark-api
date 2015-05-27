@@ -30,6 +30,7 @@ import java.util.Map;
 
 public abstract class XPatternsSparkJobClient {
 
+    public static final String VERSION = "2.0";
     public static final String SPARK_UI_PORT = "sparkUiPort";
     private String serverURI;
     private String XPATTERNS_SJS_BRIDGE_CLASS_PATH = "com.spark.job.server.scala.XPatternsSparkBridge";
@@ -42,6 +43,7 @@ public abstract class XPatternsSparkJobClient {
 
 
     public XPatternsSparkJobClient(String uri) {
+        writeInfo("###################   xPatterns Spark API  [version "+VERSION+"] ###################");
         this.serverURI = uri;
         writeInfo("********Spark Job Server Rest URI:" + uri);
     }
