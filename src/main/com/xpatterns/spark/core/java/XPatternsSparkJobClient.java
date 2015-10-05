@@ -19,7 +19,6 @@ import org.apache.http.util.EntityUtils;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -29,21 +28,14 @@ import java.util.Map;
  */
 
 public abstract class XPatternsSparkJobClient {
-
-    public static final String VERSION = "2.0";
+    public static final String VERSION = "3.0";
     public static final String SPARK_UI_PORT = "sparkUiPort";
     private String serverURI;
-    private String XPATTERNS_SJS_BRIDGE_CLASS_PATH = "com.spark.job.server.scala.XPatternsSparkBridge";
     public final SimpleDateFormat CUSTOM_DATE = new SimpleDateFormat("\"yyyy-MM-dd HH:mm:ss\"");
 
 
-    public abstract void writeInfo(String info);
-
-    public abstract void writeError(String error);
-
-
     public XPatternsSparkJobClient(String uri) {
-        writeInfo("###################   xPatterns Spark API  [version "+VERSION+"] ###################");
+        writeInfo("###################   xPatterns Spark API  [version " + VERSION + "] ###################");
         this.serverURI = uri;
         writeInfo("********Spark Job Server Rest URI:" + uri);
     }
@@ -53,23 +45,12 @@ public abstract class XPatternsSparkJobClient {
         return serverURI;
     }
 
-    public String launchXPatternsSparkJob(String mainClass, String jar, HashSet<String> parameters, String context, Boolean sync) throws Exception {
+    public abstract void writeInfo(String info);
 
-        StringBuffer input = new StringBuffer("mainClass=" + mainClass + "\n libs=\"" + jar + "\"");
-        if (parameters != null) {
-            input.append("\n");
-            for (String pair : parameters) {
-                input.append(pair);
-                input.append("\n");
-            }
-        }
+    public abstract void writeError(String error);
 
+    protected abstract String getXPatternsSjsBridgeClassPath();
 
-        input.append("xpatterns_submission_date=" + CUSTOM_DATE.format(new Date()) + "\n");
-
-        return launchJob(input.toString(), context, sync);
-
-    }
 
     public String launchJob(String input, String contextName, Boolean sync) throws Exception {
 
@@ -83,7 +64,7 @@ public abstract class XPatternsSparkJobClient {
         HttpClient httpclient = HttpClients.createDefault();
 
 
-        String uri = String.format("%s/jobs?runningClass=%s&contextName=%s", getServerURI(), XPATTERNS_SJS_BRIDGE_CLASS_PATH, contextName);
+        String uri = String.format("%s/jobs?runningClass=%s&contextName=%s", getServerURI(), getXPatternsSjsBridgeClassPath(), contextName);
         writeInfo("######################## Launching Job URI: " + uri);
 
         HttpPost httpPost = new HttpPost(uri);
