@@ -4,7 +4,7 @@
 
     <groupId>com.xpatterns</groupId>
     <artifactId>xpatterns-spark-api</artifactId>
-    <version>3.1.0-cm5-spark131-cdh541</version>
+    <version>3.1.1-cm5-spark131-cdh541</version>
 
     <name>xPatterns Spark Api</name>
     <packaging>jar</packaging>
@@ -110,12 +110,32 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>2.6.0-cdh5.4.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet.jsp</groupId>
+                    <artifactId>jsp-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
             <version>2.6.0-cdh5.4.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet.jsp</groupId>
+                    <artifactId>jsp-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
