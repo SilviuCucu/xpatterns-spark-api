@@ -9,8 +9,7 @@ import java.util.HashSet;
  */
 
 public abstract class XPatternsPythonSparkJobClient extends XPatternsSparkJobClient {
-    private String XPATTERNS_SJS_BRIDGE_CLASS_PATH = "com.spark.job.server.scala.XPatternsPythonSparkBridge";
-
+    private String XPATTERNS_SJS_BRIDGE_CLASS_PATH = "com.spark.job.server.python.XPatternsPythonSparkBridge";
 
     public XPatternsPythonSparkJobClient(String uri) {
         super(uri);
