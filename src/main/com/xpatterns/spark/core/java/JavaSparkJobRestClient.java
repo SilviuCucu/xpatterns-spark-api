@@ -8,11 +8,11 @@ import java.util.HashSet;
  * Created by radum on 10.04.2014.
  */
 
-public abstract class XPatternsJavaSparkJobClient extends XPatternsSparkJobClient {
+public abstract class JavaSparkJobRestClient extends SparkJobRestClient {
     private String XPATTERNS_SJS_BRIDGE_CLASS_PATH = "com.spark.job.server.scala.XPatternsSparkBridge";
 
 
-    public XPatternsJavaSparkJobClient(String uri) {
+    public JavaSparkJobRestClient(String uri) {
         super(uri);
     }
 
