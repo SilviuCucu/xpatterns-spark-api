@@ -35,11 +35,8 @@ public abstract class XPatternsSparkJobClient {
 
 
     public XPatternsSparkJobClient(String uri) {
-        writeInfo("###################   xPatterns Spark API  [version " + VERSION + "] ###################");
         this.serverURI = uri;
-        writeInfo("********Spark Job Server Rest URI:" + uri);
     }
-
 
     public String getServerURI() {
         return serverURI;
@@ -54,18 +51,16 @@ public abstract class XPatternsSparkJobClient {
 
     public String launchJob(String input, String contextName, Boolean sync) throws Exception {
 
-        String result = null;
         if (checkContextExist(contextName)) {
-
-            writeInfo("*** Launching Job on existing " + contextName + "!");
+            writeInfo("Launching Job on existing context <" + contextName + ">");
         } else {
-            throw new RuntimeException("***Launching Job Context " + contextName + " Does not exist!");
+            throw new RuntimeException("Job Context <" + contextName + "> does not exist!");
         }
         HttpClient httpclient = HttpClients.createDefault();
 
 
         String uri = String.format("%s/jobs?runningClass=%s&contextName=%s", getServerURI(), getXPatternsSjsBridgeClassPath(), contextName);
-        writeInfo("######################## Launching Job URI: " + uri);
+        writeInfo("Launching Job URI: " + uri);
 
         HttpPost httpPost = new HttpPost(uri);
         httpPost.setEntity(new StringEntity(input));
@@ -80,12 +75,12 @@ public abstract class XPatternsSparkJobClient {
 
 
         if (requestResult.contains("ERROR")) {
-            writeInfo("##################### RequestResult ###################\n" + requestResult);
-            throw new RuntimeException(requestResult + " ***URI***" + uri);
+            writeError("RequestResult: " + requestResult);
+            throw new RuntimeException(requestResult);
         }
 
 
-        writeInfo("\n######### Job [" + (String) values.get("jobId") + "] launched successfully, starting execution #########");
+        writeInfo("Job [" + values.get("jobId") + "] launched successfully, starting execution");
 
         return (String) values.get("jobId");
     }
@@ -135,9 +130,6 @@ public abstract class XPatternsSparkJobClient {
 
 
     public void deleteContext(String contextName) throws Exception {
-
-        writeInfo("Deleting context " + contextName + " if exists!!!");
-
         // check if context exists before deletion
         if (checkContextExist(contextName)) {
             HttpClient httpclient = HttpClients.createDefault();
@@ -161,7 +153,7 @@ public abstract class XPatternsSparkJobClient {
                 }
             }
         } else {
-            writeInfo("Context " + contextName + " doesn't exist!");
+            writeInfo("Context <" + contextName + "> doesn't exist!");
         }
         Thread.sleep(5000);
 
@@ -177,9 +169,7 @@ public abstract class XPatternsSparkJobClient {
         HttpResponse response = httpclient.execute(httpGet);
 
         boolean result = 400 == response.getStatusLine().getStatusCode() ? false : true;
-        writeInfo("Checking context : " + contextName + " ...if exists... is " + result);
         return result;
-
     }
 
     public void createApp(String appName, String resourcePath) throws Exception {
@@ -211,7 +201,7 @@ public abstract class XPatternsSparkJobClient {
     }
 
     public Integer createContext(String contextName, HashSet<String> parameters, int postCreationWaitTime) throws Exception {
-        writeInfo("Context : " + contextName + " will be created...");
+        writeInfo("Context <" + contextName + "> will be created");
         boolean resultResponse = false;
         HttpResponse response = null;
 
@@ -233,9 +223,9 @@ public abstract class XPatternsSparkJobClient {
 
         } catch (RuntimeException e) {
             //this comes only from validationResponse line!!!
-            throw new RuntimeException("1. Context " + contextName + " was NOT created! Caused by..." + e.getMessage());
+            throw new RuntimeException("Context <" + contextName + "> was NOT created! Caused by..." + e.getMessage());
         } catch (Exception e) {
-            throw new RuntimeException("2. Context " + contextName + " was NOT created! Caused by..." + getHttpResponseEntityAsString(response));
+            throw new RuntimeException("Context <" + contextName + "> was NOT created! Caused by..." + getHttpResponseEntityAsString(response));
         }
 
         if (resultResponse) {
@@ -252,7 +242,7 @@ public abstract class XPatternsSparkJobClient {
             }
 
         } else {
-            throw new RuntimeException("!!! Context creation failed!");
+            throw new RuntimeException("Context creation failed!");
         }
 
         return -1;

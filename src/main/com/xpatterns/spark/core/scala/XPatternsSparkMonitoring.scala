@@ -273,7 +273,6 @@ class XPatternsSparkMonitoring(xLogger: XPatternsLogger) extends SparkListener {
               var shuffleMessage: String = " Shuffle [ "
               val shuffleRead: Option[ShuffleReadMetrics] = taskEnd.taskMetrics.shuffleReadMetrics
               shuffleRead.foreach(rm => {
-                5
                 shuffleMessage = " read[ " + bytesToString(rm.totalBlocksFetched) + " ]"
                 stageIdToShuffleRead.get(stageId) match {
                   case None => stageIdToShuffleRead.put(stageId, 0)
