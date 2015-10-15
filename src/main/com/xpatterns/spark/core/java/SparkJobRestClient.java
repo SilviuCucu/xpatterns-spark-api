@@ -27,14 +27,14 @@ import java.util.Map;
  * Created by radum on 10.04.2014.
  */
 
-public abstract class XPatternsSparkJobClient {
+public abstract class SparkJobRestClient {
     public static final String VERSION = "3.0";
     public static final String SPARK_UI_PORT = "sparkUiPort";
     private String serverURI;
     public final SimpleDateFormat CUSTOM_DATE = new SimpleDateFormat("\"yyyy-MM-dd HH:mm:ss\"");
 
 
-    public XPatternsSparkJobClient(String uri) {
+    public SparkJobRestClient(String uri) {
         this.serverURI = uri;
     }
 
@@ -90,10 +90,10 @@ public abstract class XPatternsSparkJobClient {
         HttpEntity entity = response.getEntity();
         int statusCode = response.getStatusLine().getStatusCode();
 
-        String logPrefix = "XPatternsSparkJobClient->checkHttpResponse";
+        String logPrefix = "SparkJobRestClient->checkHttpResponse";
 
         if (entity == null) {
-            writeInfo("XPatternsSparkJobClient->checkHttpResponse->Http entity response is null!");
+            writeInfo("SparkJobRestClient->checkHttpResponse->Http entity response is null!");
         }
 
         if (200 != statusCode && 202 != statusCode) {
@@ -120,7 +120,7 @@ public abstract class XPatternsSparkJobClient {
 
     private boolean validateResponseURI(HttpResponse response, String uri) throws Exception {
         int statusCode = response.getStatusLine().getStatusCode();
-        final String message = "XPatternsSparkJobClient->HttpResponse->checkHttpResponse->statusCode: " + statusCode;
+        final String message = "SparkJobRestClient->HttpResponse->checkHttpResponse->statusCode: " + statusCode;
         if (200 != statusCode && 202 != statusCode) {
             throw new RuntimeException("Response FAILED!!!" + message + "***URI***" + uri + "---statusResponse---" + response.getStatusLine().getReasonPhrase());
         }
