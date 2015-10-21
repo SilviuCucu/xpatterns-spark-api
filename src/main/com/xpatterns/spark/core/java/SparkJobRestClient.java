@@ -235,12 +235,8 @@ public abstract class SparkJobRestClient {
             Map<String, String> values = new Gson().fromJson(responseAsString, Map.class);
 
             String sparkUiPort = values.get(SPARK_UI_PORT);
-            if (values != null && sparkUiPort != null) {
-
-                writeInfo("Context " + contextName + " was created on UI port " + sparkUiPort + "!");
+            if (values != null && sparkUiPort != null)
                 return Integer.valueOf(sparkUiPort);
-            }
-
         } else {
             throw new RuntimeException("Context creation failed!");
         }
