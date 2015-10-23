@@ -25,11 +25,9 @@ class XPatternsSparkMonitoring(xLogger: XPatternsLogger) extends SparkListener {
   val jobIdToStartTimestamp = Map[Integer, Long]()
   val stageIdToJobId = Map[Integer, Integer]()
   val stageIdToNrTasks = Map[Integer, Integer]()
-  val stageIdToSuccessullTasks = Map[Integer, Integer]()
+  val stageIdToSuccessfulTasks = Map[Integer, Integer]()
   val stageIdToShuffleRead = Map[Integer, Int]()
   val stageIdToShuffleWrite = Map[Integer, Long]()
-
-  var isApplicationDone: Boolean = false
 
   override def onApplicationStart(appStart: SparkListenerApplicationStart) {
     xLogger.info("[bridge] *SparkLog* [Starting application name[" + appStart.appName + "] sparkUser[" + appStart.sparkUser + "] time[" + appStart.time + "]")
@@ -37,10 +35,9 @@ class XPatternsSparkMonitoring(xLogger: XPatternsLogger) extends SparkListener {
   }
 
   override def onApplicationEnd(appEnd: SparkListenerApplicationEnd) {
-    xLogger.info("[bridge] *SparkLog* [Finished application in [" + appEnd.time + "] ===")
-    xLogger.info("[bridge] ============================================================================================================")
+    xLogger.info("[bridge] *SparkLog* Application finished")
     try {
-      xLogger.info("[bridge] *SparkLog* [ clossing all loggers (Cassandra, RabbitMq) \n");
+      xLogger.info("[bridge] *SparkLog* Closing XPatternsLogger");
       xLogger.closeLogger();
 
     } catch {
@@ -95,9 +92,6 @@ class XPatternsSparkMonitoring(xLogger: XPatternsLogger) extends SparkListener {
             val executionTime = (System.currentTimeMillis() - startTimestamp) / 1000.0
             val message = "JID[" + jobId + "] finished in " + executionTime + " s  with result " + arg0.jobResult
 
-
-            isApplicationDone = true
-
             jobIdToUUID.remove(jobId)
             jobIdToStartTimestamp.remove(jobId)
 
@@ -146,7 +140,7 @@ class XPatternsSparkMonitoring(xLogger: XPatternsLogger) extends SparkListener {
 
                 stageIdToJobId.put(stageId, jobId)
                 stageIdToNrTasks.put(stageId, stageSub.stageInfo.numTasks)
-                stageIdToSuccessullTasks.put(stageId, 0)
+                stageIdToSuccessfulTasks.put(stageId, 0)
                 stageIdToShuffleRead.put(stageId, 0)
                 stageIdToShuffleWrite.put(stageId, 0)
 
@@ -202,7 +196,7 @@ class XPatternsSparkMonitoring(xLogger: XPatternsLogger) extends SparkListener {
 
             stageIdToJobId.remove(stageId)
             stageIdToNrTasks.remove(stageId)
-            stageIdToSuccessullTasks.remove(stageId)
+            stageIdToSuccessfulTasks.remove(stageId)
             stageIdToShuffleRead.remove(stageId)
             stageIdToShuffleWrite.remove(stageId)
           }
@@ -256,9 +250,9 @@ class XPatternsSparkMonitoring(xLogger: XPatternsLogger) extends SparkListener {
           case Some(uuid) => {
             var message = ""
             if (taskEnd.taskInfo.successful) {
-              stageIdToSuccessullTasks.get(stageId) match {
-                case Some(successfulTasks) => stageIdToSuccessullTasks.put(stageId, successfulTasks + 1)
-                case None => stageIdToSuccessullTasks.put(stageId, 1)
+              stageIdToSuccessfulTasks.get(stageId) match {
+                case Some(successfulTasks) => stageIdToSuccessfulTasks.put(stageId, successfulTasks + 1)
+                case None => stageIdToSuccessfulTasks.put(stageId, 1)
 
               }
               // xLogger.info("[bridge] *SparkLog* [Finished task on SID["+stageId+"]/TID["+taskId+"] ["+taskInfo.status+"] in " + taskEnd.taskInfo.duration + " ms on " + taskEnd.taskInfo.host)
@@ -266,7 +260,7 @@ class XPatternsSparkMonitoring(xLogger: XPatternsLogger) extends SparkListener {
 
 
               var tasksPerStage: Integer = stageIdToNrTasks.get(stageId).get
-              var succTasksPerStage: Integer = stageIdToSuccessullTasks.get(stageId).get
+              var succTasksPerStage: Integer = stageIdToSuccessfulTasks.get(stageId).get
 
               var mainMesage: String = "SID[" + stageId + "] progress [ " + succTasksPerStage + " / " + tasksPerStage + " ] "
               var taskMessage: String = " - TID[" + taskId + "][" + taskInfo.status + "] in " + taskEnd.taskInfo.duration + " ms on " + taskEnd.taskInfo.host
