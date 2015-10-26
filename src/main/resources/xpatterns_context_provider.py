@@ -4,12 +4,11 @@ from py4j.java_gateway import JavaGateway, GatewayClient, java_import
 from pyspark import SparkContext, SparkConf
 
 
-class XPatternsProvider:
-    def __init__(self, port):
+class XPatternsContextProvider:
+    def __init__(self, host, port):
         # Connect to the py4j GatewayServer provided by the PythonJobLauncher to gain access
         # to objects related to the Spark context, in the bridge JVM
-        self._port = port
-        gateway_parameters = GatewayClient(port=self._port)
+        gateway_parameters = GatewayClient(address=host, port=port)
         gateway = JavaGateway(gateway_parameters)
 
         # Import the classes used by PySpark, to prevent "py4j.protocol.Py4JError: Trying to call a package."
@@ -28,6 +27,8 @@ class XPatternsProvider:
 
         self._python_conf = SparkConf(_jconf=java_conf)
         self._python_context = SparkContext(jsc=java_context, gateway=gateway, conf=self._python_conf)
+        # Distribute the instrumentation provider file to the worker nodes
+        self._python_context.addPyFile(gateway.entry_point.getXPatternsInstrumentationProviderFilePath())
 
         # Store the other relevant Java objects accessible via the gateway
         self._spark_job_config = gateway.entry_point.getSparkJobConfig()
@@ -43,8 +44,9 @@ class XPatternsProvider:
     def get_xpatterns_spark_job_config(self):
         return self._spark_job_config
 
-    def get_xpatterns_instrumentation(self):
-        return self._instrumentation
-
     def get_xpatterns_logger(self):
         return self._logger
+
+    # This functionality will be made available in the future
+    # def get_xpatterns_instrumentation(self):
+    #     return self._instrumentation
