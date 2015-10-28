@@ -4,7 +4,7 @@
 
     <groupId>com.xpatterns</groupId>
     <artifactId>xpatterns-spark-api</artifactId>
-    <version>3.1.1-cm5-spark131-cdh541</version>
+    <version>4.0.0-cm5-spark131-cdh541</version>
 
     <name>xPatterns Spark Api</name>
     <packaging>jar</packaging>
