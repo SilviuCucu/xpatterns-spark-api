@@ -57,12 +57,9 @@ class XPatternsContextProvider:
 
             self._python_conf = SparkConf(_jconf=java_conf)
             self._python_context = SparkContext(jsc=java_context, gateway=gateway, conf=self._python_conf)
-            # Distribute the instrumentation provider file to the worker nodes
-            self._python_context.addPyFile(gateway.entry_point.getXPatternsInstrumentationProviderFilePath())
 
             # Store the other relevant Java objects accessible via the gateway
             self._spark_job_config = gateway.entry_point.getSparkJobConfig()
-            self._instrumentation = gateway.entry_point.getXPatternsInstrumentation()
             self._logger = gateway.entry_point.getXPatternsLogger()
 
         def __str__(self):
